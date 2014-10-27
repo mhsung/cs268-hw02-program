@@ -28,6 +28,8 @@ public class Manager extends JPanel implements Runnable {
   private Map<Point, ReflectEvent> verticalReflectEvents = new HashMap<Point, ReflectEvent>();
   
   private Map<Point, Map<Point, CollideEvent>> collideEvents = new HashMap<Point, Map<Point, CollideEvent>>();
+  //@mhsung
+  private Map<Triangulation.Edge, EdgeFlipEvent> edgeFlipEvents = new HashMap<Triangulation.Edge, EdgeFlipEvent>();
   
   
   public Manager(Point[] p, double bound) {
@@ -86,8 +88,32 @@ public class Manager extends JPanel implements Runnable {
         queue.add(e);
       }
     }
+
+    //@mhsung
+    edgeFlipEvents.clear();
+
+    for(Triangulation.Edge e : triangulation.getEdges()) {
+      if (!triangulation.isBoundary(e) && edgeFlipEvents.get(e.pair) == null) {
+        EdgeFlipEvent evt = getEdgeFlipInstance(e);
+        if(evt != null) {
+          Triangulation.Vertex a = e.vertex;
+          Triangulation.Vertex b = e.next.vertex;
+          System.out.println("Event: " + a.p + " - " + b.p + " (" + evt.getTime() + ")");
+
+          edgeFlipEvents.put(e, evt);
+          queue.add(evt);
+        }
+      }
+    }
   }
-  
+
+  // @mhsung
+  public void addEdgeFlipEvents(Triangulation.Edge e) {
+    assert edgeFlipEvents.get(e.pair) == null;
+    EdgeFlipEvent evt = getEdgeFlipInstance(e);
+    edgeFlipEvents.put(e, evt);
+    queue.add(evt);
+  }
   
   /*
    * Removes and recomputes all events associated with the given Point.
@@ -113,6 +139,38 @@ public class Manager extends JPanel implements Runnable {
       collideEvents.get(p2).put(p, e);
       queue.add(e);
     }
+
+    // @mhsung
+    System.out.println("Invalidated.");
+    for (Map.Entry<Triangulation.Edge, EdgeFlipEvent> e : edgeFlipEvents.entrySet()) {
+      queue.remove(e.getValue());
+    }
+    edgeFlipEvents.clear();
+
+    for(Triangulation.Edge e : triangulation.getEdges()) {
+      if (!triangulation.isBoundary(e) && edgeFlipEvents.get(e.pair) == null) {
+        EdgeFlipEvent evt = getEdgeFlipInstance(e);
+        if(evt != null) {
+          edgeFlipEvents.put(e, evt);
+          queue.add(evt);
+        }
+      }
+    }
+  }
+
+  // @mhsung
+  public void invalidate(Triangulation.Edge e) {
+      queue.remove(edgeFlipEvents.get(e));
+      queue.remove(edgeFlipEvents.get(e.pair));
+
+      edgeFlipEvents.remove(e);
+      edgeFlipEvents.remove(e.pair);
+
+      EdgeFlipEvent evt = getEdgeFlipInstance(e);
+      if(evt != null) {
+          edgeFlipEvents.put(e, evt);
+          queue.add(evt);
+      }
   }
   
   public void update() {
@@ -126,7 +184,7 @@ public class Manager extends JPanel implements Runnable {
     updatePoints(finalTime - time);
     
     // TODO: This line should be removed once you have edge flip events working.
-    triangulation = new Triangulation(points, bound);
+    //triangulation = new Triangulation(points, bound);
   }
   
   private void updatePoints(double delta) {
