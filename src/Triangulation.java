@@ -353,4 +353,15 @@ public class Triangulation {
   public Set<Edge> getEdges() {
     return Collections.unmodifiableSet(edges);
   }
+
+  // @mhsung
+  public Vertex findVertex(Point p) {
+    for (Vertex v : getVertices()) {
+      if (v.p == p) {
+        return v;
+      }
+    }
+
+    return null;
+  }
 }

@@ -78,7 +78,13 @@ public class Manager extends JPanel implements Runnable {
     }
     
     for (Point p : points) {
-      addReflectEvents(p);
+      //addReflectEvents(p);
+
+      // @mhsung
+      Triangulation.Vertex v = triangulation.findVertex(p);
+      assert v != null;
+      if (triangulation.isOnHull(v))
+        addReflectEvents(p);
       
       for (Point p2 : points) {
         if (p2 == p) break;
@@ -141,36 +147,30 @@ public class Manager extends JPanel implements Runnable {
     }
 
     // @mhsung
-    System.out.println("Invalidated.");
-    for (Map.Entry<Triangulation.Edge, EdgeFlipEvent> e : edgeFlipEvents.entrySet()) {
-      queue.remove(e.getValue());
-    }
-    edgeFlipEvents.clear();
+    Triangulation.Vertex v = triangulation.findVertex(p);
+    assert v != null;
 
-    for(Triangulation.Edge e : triangulation.getEdges()) {
-      if (!triangulation.isBoundary(e) && edgeFlipEvents.get(e.pair) == null) {
-        EdgeFlipEvent evt = getEdgeFlipInstance(e);
-        if(evt != null) {
-          edgeFlipEvents.put(e, evt);
-          queue.add(evt);
-        }
-      }
+    Set<Triangulation.Edge> edges = triangulation.getOutgoingEdges(v);
+    for(Triangulation.Edge e : edges) {
+      assert e.next != null;
+      invalidate(e);
+      invalidate(e.next);
     }
   }
 
   // @mhsung
   public void invalidate(Triangulation.Edge e) {
-      queue.remove(edgeFlipEvents.get(e));
-      queue.remove(edgeFlipEvents.get(e.pair));
+    queue.remove(edgeFlipEvents.get(e));
+    queue.remove(edgeFlipEvents.get(e.pair));
 
-      edgeFlipEvents.remove(e);
-      edgeFlipEvents.remove(e.pair);
+    edgeFlipEvents.remove(e);
+    edgeFlipEvents.remove(e.pair);
 
-      EdgeFlipEvent evt = getEdgeFlipInstance(e);
-      if(evt != null) {
-          edgeFlipEvents.put(e, evt);
-          queue.add(evt);
-      }
+    EdgeFlipEvent evt = getEdgeFlipInstance(e);
+    if(evt != null) {
+      edgeFlipEvents.put(e, evt);
+      queue.add(evt);
+    }
   }
   
   public void update() {
