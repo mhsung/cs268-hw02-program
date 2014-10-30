@@ -30,14 +30,23 @@ public class EdgeFlipEvent extends Event {
     boolean is_c_on_hull_new = !t.isBoundary(c) && t.isOnHull(c);
     boolean is_d_on_hull_new = !t.isBoundary(d) && t.isOnHull(d);
 
+    // Update reflection events.
     assert is_a_on_hull_old || !is_a_on_hull_new;
     assert is_b_on_hull_old || !is_b_on_hull_new;
-    //if (!is_a_on_hull_old && is_a_on_hull_new) manager.addReflectEvents(a.p);
-    //if (!is_b_on_hull_old && is_b_on_hull_new) manager.addReflectEvents(b.p);
-
     if (!is_c_on_hull_old && is_c_on_hull_new) manager.addReflectEvents(c.p);
     if (!is_d_on_hull_old && is_d_on_hull_new) manager.addReflectEvents(d.p);
 
+
+    // Update collision events.
+    if (!t.isBoundary(a) && !t.isBoundary(b)) {
+      manager.removeCollisionEvents(a.p, b.p);
+    }
+
+    if (!t.isBoundary(c) && !t.isBoundary(d)) {
+      manager.addCollisionEvents(c.p, d.p);
+    }
+
+    // Update edge flip events.
     manager.invalidate(e.next);
     manager.invalidate(e.next.next);
     manager.invalidate(e.pair.next);

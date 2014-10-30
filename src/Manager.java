@@ -7,6 +7,8 @@ import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -71,45 +73,32 @@ public class Manager extends JPanel implements Runnable {
     queue.remove(horizontalReflectEvents.remove(p));
     queue.remove(verticalReflectEvents.remove(p));
   }
-  
-  private void initQueue() {
-    for (Point p : points) {
-      collideEvents.put(p, new HashMap<Point, CollideEvent>());
-    }
-    
-    for (Point p : points) {
-      //addReflectEvents(p);
 
-      // @mhsung
-      Triangulation.Vertex v = triangulation.findVertex(p);
-      assert v != null;
-      if (triangulation.isOnHull(v))
-        addReflectEvents(p);
-      
-      for (Point p2 : points) {
-        if (p2 == p) break;
-        CollideEvent e = getCollideInstance(p, p2);
-        collideEvents.get(p).put(p2, e);
-        collideEvents.get(p2).put(p, e);
-        queue.add(e);
-      }
-    }
+  // @mhsung
+  public void addCollisionEvents(Point p, Point p2) {
+    assert p != null;
+    assert p2 != null;
+    assert p2 != p;
 
-    //@mhsung
-    edgeFlipEvents.clear();
+    if (collideEvents.get(p).get(p2) != null) return;
 
-    for(Triangulation.Edge e : triangulation.getEdges()) {
-      if (!triangulation.isBoundary(e) && edgeFlipEvents.get(e.pair) == null) {
-        EdgeFlipEvent evt = getEdgeFlipInstance(e);
-        if(evt != null) {
-          Triangulation.Vertex a = e.vertex;
-          Triangulation.Vertex b = e.next.vertex;
-          System.out.println("Event: " + a.p + " - " + b.p + " (" + evt.getTime() + ")");
+    assert collideEvents.get(p2).get(p) == null;
+    CollideEvent evt = getCollideInstance(p, p2);
+    collideEvents.get(p).put(p2, evt);
+    collideEvents.get(p2).put(p, evt);
+    queue.add(evt);
+  }
 
-          edgeFlipEvents.put(e, evt);
-          queue.add(evt);
-        }
-      }
+  // @mhsung
+  public void removeCollisionEvents(Point p, Point p2) {
+    CollideEvent evt = collideEvents.get(p).get(p2);
+    if (evt == null) {
+      assert collideEvents.get(p2).get(p) == null;
+    } else {
+      assert collideEvents.get(p2).get(p) != null;
+      collideEvents.get(p).remove(p2);
+      collideEvents.get(p2).remove(p);
+      queue.remove(evt);
     }
   }
 
@@ -120,17 +109,73 @@ public class Manager extends JPanel implements Runnable {
     edgeFlipEvents.put(e, evt);
     queue.add(evt);
   }
+
+  private void initQueue() {
+    for (Point p : points) {
+      collideEvents.put(p, new HashMap<Point, CollideEvent>());
+    }
+
+    // @mhsung
+    for (Point p : points) {
+      //addReflectEvents(p);
+
+      Triangulation.Vertex v = triangulation.findVertex(p);
+      assert v != null;
+      if (triangulation.isOnHull(v))
+        addReflectEvents(p);
+    }
+
+    /*
+    for (Point p : points) {
+      for (Point p2 : points) {
+        if (p2 == p) break;
+        CollideEvent e = getCollideInstance(p, p2);
+        collideEvents.get(p).put(p2, e);
+        collideEvents.get(p2).put(p, e);
+        queue.add(e);
+      }
+    }
+    */
+
+    //@mhsung
+    for(Triangulation.Edge e : triangulation.getEdges()) {
+      Triangulation.Vertex v = e.vertex;
+      Triangulation.Vertex v2 = e.next.vertex;
+      if (!triangulation.isBoundary(v) && !triangulation.isBoundary(v2)) {
+        if (collideEvents.get(v.p).get(v2.p) == null) {
+          assert collideEvents.get(v2.p).get(v.p) == null;
+          addCollisionEvents(v.p, v2.p);
+        }
+      }
+    }
+
+    //@mhsung
+    edgeFlipEvents.clear();
+
+    for(Triangulation.Edge e : triangulation.getEdges()) {
+      if (!triangulation.isBoundary(e) && edgeFlipEvents.get(e.pair) == null) {
+        EdgeFlipEvent evt = getEdgeFlipInstance(e);
+        if(evt != null) {
+          edgeFlipEvents.put(e, evt);
+          queue.add(evt);
+        }
+      }
+    }
+  }
   
   /*
    * Removes and recomputes all events associated with the given Point.
    * This must be called whenever a Point's trajectory changes.
    */
   public void invalidate(Point p) {
-    // update collisions with walls
-    removeReflectEvents(p);
-    
-    addReflectEvents(p);
-    
+    // @mhsung
+    if (horizontalReflectEvents.containsKey(p)) {
+      // update collisions with walls
+      removeReflectEvents(p);
+      addReflectEvents(p);
+    }
+
+    /*
     // update collisions with other points
     for (Map.Entry<Point, CollideEvent> e : collideEvents.get(p).entrySet()) {
       collideEvents.get(e.getKey()).remove(p);
@@ -144,6 +189,22 @@ public class Manager extends JPanel implements Runnable {
       collideEvents.get(p).put(p2, e);
       collideEvents.get(p2).put(p, e);
       queue.add(e);
+    }
+    */
+
+    // @mhsung
+    List<Point> p2_list = new LinkedList<Point>();
+    for (Map.Entry<Point, CollideEvent> e : collideEvents.get(p).entrySet()) {
+      collideEvents.get(e.getKey()).remove(p);
+      queue.remove(e.getValue());
+      p2_list.add(e.getKey());
+    }
+    collideEvents.get(p).clear();
+
+    for (Point p2 : p2_list) {
+      //if (p2 == p) continue;
+      assert p2 != p;
+      addCollisionEvents(p, p2);
     }
 
     // @mhsung
