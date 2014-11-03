@@ -31,6 +31,7 @@ public class Manager extends JPanel implements Runnable {
   
   private Map<Point, Map<Point, CollideEvent>> collideEvents = new HashMap<Point, Map<Point, CollideEvent>>();
   //@mhsung
+  // A new map for edge flip events in the queue.
   private Map<Triangulation.Edge, EdgeFlipEvent> edgeFlipEvents = new HashMap<Triangulation.Edge, EdgeFlipEvent>();
   
   
@@ -116,6 +117,8 @@ public class Manager extends JPanel implements Runnable {
     }
 
     // @mhsung
+    // Add reflection events in the queue only when the point is on the convex
+    // hull.
     for (Point p : points) {
       //addReflectEvents(p);
 
@@ -125,6 +128,9 @@ public class Manager extends JPanel implements Runnable {
         addReflectEvents(p);
     }
 
+    //@mhsung
+    // Add collision events in the queue only when the two points are on the
+    // triangulation edge.
     /*
     for (Point p : points) {
       for (Point p2 : points) {
@@ -137,7 +143,6 @@ public class Manager extends JPanel implements Runnable {
     }
     */
 
-    //@mhsung
     for(Triangulation.Edge e : triangulation.getEdges()) {
       Triangulation.Vertex v = e.vertex;
       Triangulation.Vertex v2 = e.next.vertex;
@@ -150,6 +155,7 @@ public class Manager extends JPanel implements Runnable {
     }
 
     //@mhsung
+    // Add edge flip events in the queue.
     edgeFlipEvents.clear();
 
     for(Triangulation.Edge e : triangulation.getEdges()) {
@@ -175,6 +181,8 @@ public class Manager extends JPanel implements Runnable {
       addReflectEvents(p);
     }
 
+    // @mhsung
+    // Update collision events for the triangulation edges.
     /*
     // update collisions with other points
     for (Map.Entry<Point, CollideEvent> e : collideEvents.get(p).entrySet()) {
@@ -192,7 +200,6 @@ public class Manager extends JPanel implements Runnable {
     }
     */
 
-    // @mhsung
     List<Point> p2_list = new LinkedList<Point>();
     for (Map.Entry<Point, CollideEvent> e : collideEvents.get(p).entrySet()) {
       collideEvents.get(e.getKey()).remove(p);
@@ -202,12 +209,13 @@ public class Manager extends JPanel implements Runnable {
     collideEvents.get(p).clear();
 
     for (Point p2 : p2_list) {
-      //if (p2 == p) continue;
       assert p2 != p;
       addCollisionEvents(p, p2);
     }
 
     // @mhsung
+    // Update edge flip events when the edge is one of out-going edges, or the
+    // next of one of out-going edges of the invalidated vertex.
     Triangulation.Vertex v = triangulation.findVertex(p);
     assert v != null;
 
@@ -220,6 +228,7 @@ public class Manager extends JPanel implements Runnable {
   }
 
   // @mhsung
+  // Invalidate edge.
   public void invalidate(Triangulation.Edge e) {
     queue.remove(edgeFlipEvents.get(e));
     queue.remove(edgeFlipEvents.get(e.pair));

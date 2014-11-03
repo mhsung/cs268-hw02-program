@@ -355,6 +355,7 @@ public class Triangulation {
   }
 
   // @mhsung
+  // Find a vertex corresponding to the given point.
   public Vertex findVertex(Point p) {
     for (Vertex v : getVertices()) {
       if (v.p == p) {
