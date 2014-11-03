@@ -134,7 +134,7 @@ public class Manager extends JPanel implements Runnable {
     /*
     for (Point p : points) {
       for (Point p2 : points) {
-        if (p2 == p) break;
+        if (p2 == p) continue;
         CollideEvent e = getCollideInstance(p, p2);
         collideEvents.get(p).put(p2, e);
         collideEvents.get(p2).put(p, e);
