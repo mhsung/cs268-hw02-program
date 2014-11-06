@@ -256,11 +256,16 @@ public class Manager extends JPanel implements Runnable {
     // TODO: This line should be removed once you have edge flip events working.
     //triangulation = new Triangulation(points, bound);
   }
-  
+
+  // @taodu:
   private void updatePoints(double delta) {
     for (Point p : points) {
-      p.x += p.vx * delta;
-      p.y += p.vy * delta;
+      double vx0 = p.vx;
+      double vy0 = p.vy;
+      p.vx += p.ax * delta;
+      p.vy += p.ay * delta;
+      p.x += (vx0 + p.vx) * delta / 2;
+      p.y += (vy0 + p.vy) * delta / 2;
     }
     time += delta;
   }
