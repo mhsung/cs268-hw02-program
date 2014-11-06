@@ -23,6 +23,9 @@ public class Manager extends JPanel implements Runnable {
   private Set<Point> points = new HashSet<Point>();
   private double time = 0;
   private double bound;
+
+  // @taodu: epsilon to tolerate numerical issues.
+  private static double EPSILON = 1e-6;
   
   private Triangulation triangulation;
   private EventQueue queue;
@@ -271,6 +274,7 @@ public class Manager extends JPanel implements Runnable {
     time += delta;
   }
 
+  // @taodu
   private double getReflectTime(Point p, boolean isHorizontal) {
     double t = Double.POSITIVE_INFINITY;
     Poly poly;
@@ -280,38 +284,44 @@ public class Manager extends JPanel implements Runnable {
     double z0 = isHorizontal ? p.x : p.y;
     poly = new Poly(new double[]{z0 - z, v, 0.5 * a});
     ArrayList<Double> root = poly.positiveRoots();
-    double epsilon = 1e-6;
-    while (root.size() > 0 && root.get(0) < epsilon) root.remove(0);
+    while (root.size() > 0 && root.get(0) < EPSILON) root.remove(0);
     if (root.size() > 0) t = root.get(0);
     poly = new Poly(new double[]{z0 + z, v, 0.5 * a});
     root = poly.positiveRoots();
-    while (root.size() > 0 && root.get(0) < epsilon) root.remove(0);
+    while (root.size() > 0 && root.get(0) < EPSILON) root.remove(0);
     if (root.size() > 0) t = Math.min(t, root.get(0));
     return t;
   }
 
+  // @taodu
   public ReflectEvent getReflectInstance(Point p, boolean isHorizontal) {
     double t = getReflectTime(p, isHorizontal);
     if (t == Double.POSITIVE_INFINITY) return null;
     else return new ReflectEvent(p, isHorizontal, this, time + t);
   }
-  
+
+  // @taodu
   public CollideEvent getCollideInstance(Point p1, Point p2) {
-    double dx = p1.x - p2.x;
-    double dy = p1.y - p2.y;
-    double dvx = p1.vx - p2.vx;
-    double dvy = p1.vy - p2.vy;
-    
-    double a = dvx * dvx + dvy * dvy;
-    if (a == 0) return null;
-    double b = dx * dvx + dy * dvy;
-    double c = dx * dx + dy * dy - (p1.r + p2.r) * (p1.r + p2.r);
-    
-    double disc = b * b - a * c;
-    if (disc <= 0) return null;
-    double t = (-b - Math.sqrt(disc)) / a;
-    if (t <= 1e-6) return null;
-    
+    double x = p1.x - p2.x;
+    double y = p1.y - p2.y;
+    double vx = p1.vx - p2.vx;
+    double vy = p1.vy - p2.vy;
+    double ax = p1.ax - p2.ax;
+    double ay = p1.ay - p2.ay;
+    double r = p1.r + p2.r;
+
+    // x(t) = x + vx * t + 0.5 * ax * t^2
+    // y(t) = y + vy * t + 0.5 * ay * t^2
+    // x^2 + y^2 == r^2
+    Poly polyx = new Poly(new double[]{x, vx, 0.5 * ax});
+    Poly polyy = new Poly(new double[]{y, vy, 0.5 * ay});
+    Poly poly = Poly.add(Poly.mult(polyx, polyx), Poly.mult(polyy, polyy));
+    Poly polyr = new Poly(new double[]{r * r});
+    poly = Poly.subtract(poly, polyr);
+    ArrayList<Double> root = poly.positiveRoots();
+    while (root.size() > 0 && root.get(0) < EPSILON) root.remove(0);
+    if (root.size() == 0) return null;
+    double t = root.get(0);
     return new CollideEvent(p1, p2, this, time + t);
   }
   
