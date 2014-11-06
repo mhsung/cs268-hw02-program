@@ -324,7 +324,8 @@ public class Manager extends JPanel implements Runnable {
     double t = root.get(0);
     return new CollideEvent(p1, p2, this, time + t);
   }
-  
+
+  // @taodu
   public EdgeFlipEvent getEdgeFlipInstance(Triangulation.Edge e) {
     if (triangulation.isBoundary(e)) return null;
     
@@ -332,10 +333,10 @@ public class Manager extends JPanel implements Runnable {
     Point b = e.next.vertex.p;
     Point c = e.next.next.vertex.p;
     Point d = e.pair.next.next.vertex.p;
-    Poly ax = new Poly(new double[] {a.x, a.vx}), ay = new Poly(new double[] {a.y, a.vy});
-    Poly bx = new Poly(new double[] {b.x, b.vx}), by = new Poly(new double[] {b.y, b.vy});
-    Poly cx = new Poly(new double[] {c.x, c.vx}), cy = new Poly(new double[] {c.y, c.vy});
-    Poly dx = new Poly(new double[] {d.x, d.vx}), dy = new Poly(new double[] {d.y, d.vy});
+    Poly ax = new Poly(new double[] {a.x, a.vx, 0.5 * a.ax}), ay = new Poly(new double[] {a.y, a.vy, 0.5 * a.ay});
+    Poly bx = new Poly(new double[] {b.x, b.vx, 0.5 * b.ax}), by = new Poly(new double[] {b.y, b.vy, 0.5 * b.ay});
+    Poly cx = new Poly(new double[] {c.x, c.vx, 0.5 * c.ax}), cy = new Poly(new double[] {c.y, c.vy, 0.5 * c.ay});
+    Poly dx = new Poly(new double[] {d.x, d.vx, 0.5 * d.ax}), dy = new Poly(new double[] {d.y, d.vy, 0.5 * d.ay});
     Poly az = Poly.add(Poly.mult(ax, ax), Poly.mult(ay, ay));
     Poly bz = Poly.add(Poly.mult(bx, bx), Poly.mult(by, by));
     Poly cz = Poly.add(Poly.mult(cx, cx), Poly.mult(cy, cy));
@@ -345,10 +346,13 @@ public class Manager extends JPanel implements Runnable {
                                            Poly.det3(ax, ay, az, bx, by, bz, dx, dy, dz)),
                              Poly.subtract(Poly.det3(ax, ay, az, cx, cy, cz, dx, dy, dz),
                                            Poly.det3(bx, by, bz, cx, cy, cz, dx, dy, dz)));
-    
-    double t = inCircle.firstPositiveAscendingRoot();
+
+    ArrayList<Double> roots = inCircle.positiveRoots();
+    int cur = 0;
+    Poly de = inCircle.derivative();
+    while (cur < roots.size() && (roots.get(cur) < EPSILON || de.eval(roots.get(cur)) <= 0)) cur++;
+    double t = cur < roots.size() ? roots.get(cur) : Double.NaN;
     if (Double.isNaN(t)) return null;
-    
     return new EdgeFlipEvent(triangulation, e, this, time + t);
   }
   
