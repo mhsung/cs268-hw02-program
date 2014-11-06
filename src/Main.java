@@ -33,6 +33,7 @@ public class Main extends JFrame {
       System.exit(1);
     }
     Scanner s = new Scanner(new File(args[0]));
+    // @taodu: add support for acceleration.
     boolean hasAcce = false;
     if (args.length > 1 && args[1].equals("-a")) {
       hasAcce = true;
