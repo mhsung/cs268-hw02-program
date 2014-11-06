@@ -280,9 +280,12 @@ public class Manager extends JPanel implements Runnable {
     double z0 = isHorizontal ? p.x : p.y;
     poly = new Poly(new double[]{z0 - z, v, 0.5 * a});
     ArrayList<Double> root = poly.positiveRoots();
+    double epsilon = 1e-6;
+    while (root.size() > 0 && root.get(0) < epsilon) root.remove(0);
     if (root.size() > 0) t = root.get(0);
     poly = new Poly(new double[]{z0 + z, v, 0.5 * a});
     root = poly.positiveRoots();
+    while (root.size() > 0 && root.get(0) < epsilon) root.remove(0);
     if (root.size() > 0) t = Math.min(t, root.get(0));
     return t;
   }
