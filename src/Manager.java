@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -269,19 +270,27 @@ public class Manager extends JPanel implements Runnable {
     }
     time += delta;
   }
-  
+
+  private double getReflectTime(Point p, boolean isHorizontal) {
+    double t = Double.POSITIVE_INFINITY;
+    Poly poly;
+    double z = bound - p.r;
+    double a = isHorizontal ? p.ax : p.ay;
+    double v = isHorizontal ? p.vx : p.vy;
+    double z0 = isHorizontal ? p.x : p.y;
+    poly = new Poly(new double[]{z0 - z, v, 0.5 * a});
+    ArrayList<Double> root = poly.positiveRoots();
+    if (root.size() > 0) t = root.get(0);
+    poly = new Poly(new double[]{z0 + z, v, 0.5 * a});
+    root = poly.positiveRoots();
+    if (root.size() > 0) t = Math.min(t, root.get(0));
+    return t;
+  }
+
   public ReflectEvent getReflectInstance(Point p, boolean isHorizontal) {
-    if (isHorizontal) {
-      if (p.vx > 0) return new ReflectEvent(p, isHorizontal, this, time + (bound - p.x - p.r) / p.vx);
-      else if (p.vx < 0) return new ReflectEvent(p, isHorizontal, this, time - (p.x - p.r + bound) / p.vx);
-      else return null;
-    } else {
-      if (p.vy > 0) {
-        return new ReflectEvent(p, isHorizontal, this, time + (bound - p.y - p.r) / p.vy);
-      }
-      else if (p.vy < 0) return new ReflectEvent(p, isHorizontal, this, time - (p.y - p.r + bound) / p.vy);
-      else return null;
-    }
+    double t = getReflectTime(p, isHorizontal);
+    if (t == Double.POSITIVE_INFINITY) return null;
+    else return new ReflectEvent(p, isHorizontal, this, time + t);
   }
   
   public CollideEvent getCollideInstance(Point p1, Point p2) {
