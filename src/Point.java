@@ -2,19 +2,24 @@
 public class Point {
   public double x, y;
   public double vx, vy;
+  public double ax, ay;
   public double r;
   
-  public Point(double x, double y) {this(x, y, 0, 0, 0);}
+  public Point(double x, double y) {this(x, y, 0, 0, 0, 0, 0);}
   
-  public Point(double x, double y, double vx, double vy) {this(x, y, vx, vy, 0);}
+  public Point(double x, double y, double vx, double vy) {this(x, y, vx, vy, 0, 0, 0);}
   
-  public Point(double x, double y, double r) {this(x, y, 0, 0, r);}
+  public Point(double x, double y, double r) {this(x, y, 0, 0, 0, 0, r);}
   
-  public Point(double x, double y, double vx, double vy, double r) {
+  public Point(double x, double y, double vx, double vy, double r) {this(x, y, vx, vy, 0, 0, r);}
+
+  public Point(double x, double y, double vx, double vy, double ax, double ay, double r) {
     this.x = x;
     this.y = y;
     this.vx = vx;
     this.vy = vy;
+    this.ax = ax;
+    this.ay = ay;
     this.r = r;
   }
   

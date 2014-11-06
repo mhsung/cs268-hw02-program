@@ -33,11 +33,20 @@ public class Main extends JFrame {
       System.exit(1);
     }
     Scanner s = new Scanner(new File(args[0]));
+    boolean hasAcce = false;
+    if (args.length > 1 && args[1].equals("-a")) {
+      hasAcce = true;
+    }
     int n = s.nextInt();
     double r = s.nextDouble();
     Point[] p = new Point[n];
     for (int i = 0; i < n; i++) {
-      p[i] = new Point(s.nextDouble(), s.nextDouble(), s.nextDouble(), s.nextDouble(), r);
+      if (hasAcce) {
+        p[i] = new Point(s.nextDouble(), s.nextDouble(), s.nextDouble(), s.nextDouble(),
+                         s.nextDouble(), s.nextDouble(), r);
+      } else {
+        p[i] = new Point(s.nextDouble(), s.nextDouble(), s.nextDouble(), s.nextDouble(), r);
+      }
     }
     s.close();
     new Main(p);
