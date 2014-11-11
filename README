@@ -3,12 +3,9 @@ Minhyuk Sung mhsung@stanford.edu
 Tao Du taodu@stanford.edu
 Li Yi ericyi@stanford.edu
 
-We add full support for accelerations. You can assign ax and ay for each points
-from the input file.
+We add full support for accelerations. You can assign ax and ay for each points from the input file.
 
-We augmented two sample inputs to help evaluate our extra credit implementation.
-sample4.txt extends sample1.txt, adding accelerations for all the points.
-Similarly, sample5.txt is an augmented version of sample2.txt. To run with
-acceleration support, please use -a option. i.e.
+We augmented three sample inputs to help evaluate our extra credit implementation. sample4.txt extends sample1.txt, adding accelerations for all the points. Similarly, sample5.txt is an augmented version of sample2.txt, and sample6.txt extends sample3.txt. To run with acceleration support, please use -a option. i.e.
 java Main sample4.txt -a
 java Main sample5.txt -a
+java Main sample6.txt -a
