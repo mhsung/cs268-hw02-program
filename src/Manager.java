@@ -347,11 +347,7 @@ public class Manager extends JPanel implements Runnable {
                              Poly.subtract(Poly.det3(ax, ay, az, cx, cy, cz, dx, dy, dz),
                                            Poly.det3(bx, by, bz, cx, cy, cz, dx, dy, dz)));
 
-    ArrayList<Double> roots = inCircle.positiveRoots();
-    int cur = 0;
-    Poly de = inCircle.derivative();
-    while (cur < roots.size() && (roots.get(cur) < EPSILON || de.eval(roots.get(cur)) <= 0)) cur++;
-    double t = cur < roots.size() ? roots.get(cur) : Double.NaN;
+    double t = inCircle.firstPositiveAscendingRoot();
     if (Double.isNaN(t)) return null;
     return new EdgeFlipEvent(triangulation, e, this, time + t);
   }
